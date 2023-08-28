@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import config from "config";
 
-export function authMiddleware(req: any, res: any, next: any) {
+export function addChannelMiddleware(req: any, res: any, next: any) {
   try {
-    const token = req.headers.authorization;
+    const token = req.body.token;
     if (!token) {
       return res.status(401).json({ message: "Auth error" });
     }
