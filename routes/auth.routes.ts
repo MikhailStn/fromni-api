@@ -113,7 +113,75 @@ router.put("/add-channel", authChannelMiddleware, async (req: any, res: any) => 
     const { message, quickButtons, urlButtons, keyboard, key } = req.body;
     if (key == "vk") {
       if (user) {
-        console.log(message);
+        if (keyboard == "inline") {
+          if (quickButtons.length > 10) {
+            return res.status(400).json({ message: `Максимальное количество кнопок - 10` });
+          }
+        } else {
+          if (quickButtons.length > 40) {
+            return res.status(400).json({ message: `Максимальное количество кнопок - 10` });
+          }
+        }
+        user.channels[0].message = message;
+        user.channels[0].quickButtons = quickButtons;
+        user.channels[0].urlButtons = urlButtons;
+        user.channels[0].keyboard = keyboard;
+        await user.save();
+      }
+    } else if (key == "telegram") {
+      if (keyboard == "standart") {
+        if (urlButtons.length > 0) {
+          return res.status(400).json({ message: `Кнопки-ссылки недоступны для этой клавиатуры` });
+        }
+      }
+      if (user) {
+        user.channels[1].message = message;
+        user.channels[1].quickButtons = quickButtons;
+        user.channels[1].urlButtons = urlButtons;
+        user.channels[1].keyboard = keyboard;
+        await user.save();
+      }
+    } else if (key == "whatsapp") {
+      if (user) {
+        if (keyboard == "inline") {
+          if (quickButtons.length > 3) {
+            return res.status(400).json({ message: `Максимальное количество кнопок - 3` });
+          }
+          if (urlButtons.length > 1) {
+            return res.status(400).json({ message: `Максимальное количество кнопок-ссылок - 1` });
+          }
+        } else {
+          if (quickButtons.length > 10) {
+            return res.status(400).json({ message: `Максимальное количество кнопок - 10` });
+          }
+          if (urlButtons.length > 0) {
+            return res.status(400).json({ message: `Кнопки-ссылки недоступны для этой клавиатуры` });
+          }
+        }
+        user.channels[2].message = message;
+        user.channels[2].quickButtons = quickButtons;
+        user.channels[2].urlButtons = urlButtons;
+        user.channels[2].keyboard = keyboard;
+        await user.save();
+      }
+    } else {
+      if (user) {
+        user.channels[3].message = message;
+        await user.save();
+      }
+    }
+    return res.json({ user });
+  } catch (e) {
+    res.send({ message: "Ошибка сервера" });
+  }
+});
+
+router.put("/remove-button", authChannelMiddleware, async (req: any, res: any) => {
+  try {
+    const user = await User.findOne({ _id: req.user.id });
+    const { message, quickButtons, urlButtons, keyboard, key } = req.body;
+    if (key == "vk") {
+      if (user) {
         user.channels[0].message = message;
         user.channels[0].quickButtons = quickButtons;
         user.channels[0].urlButtons = urlButtons;
