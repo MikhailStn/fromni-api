@@ -5,7 +5,7 @@ import { User } from "../models/User.js";
 import jwt from "jsonwebtoken";
 import config from "config";
 import { authMiddleware } from "../middleware/auth.middleware.js";
-import { addChannelMiddleware } from "../middleware/addChannel.middleware.js";
+import { authChannelMiddleware } from "../middleware/authChannel.middleware.js";
 
 export const router = Router();
 
@@ -37,32 +37,32 @@ router.post(
             isActive: false,
             message: "",
             keyboard: "standart",
-            quickButtons: "",
-            urlButtons: "",
+            quickButtons: [],
+            urlButtons: [],
           },
           {
             name: "telegram",
             isActive: false,
             message: "",
             keyboard: "standart",
-            quickButtons: "",
-            urlButtons: "",
+            quickButtons: [],
+            urlButtons: [],
           },
           {
             name: "whatsapp",
             isActive: false,
             message: "",
             keyboard: "standart",
-            quickButtons: "",
-            urlButtons: "",
+            quickButtons: [],
+            urlButtons: [],
           },
           {
             name: "sms",
             isActive: false,
             message: "",
             keyboard: "standart",
-            quickButtons: "",
-            urlButtons: "",
+            quickButtons: [],
+            urlButtons: [],
           },
         ],
       });
@@ -70,10 +70,7 @@ router.post(
       const token = jwt.sign({ id: user._id }, config.get("secretKey"));
       return res.json({
         token,
-        user: {
-          id: user._id,
-          email: user.email,
-        },
+        user,
       });
     } catch (e) {
       res.send({ message: "Ошибка сервера" });
@@ -110,13 +107,13 @@ router.get("/auth", authMiddleware, async (req: any, res: any) => {
   }
 });
 
-router.put("/add-channel", addChannelMiddleware, async (req: any, res: any) => {
+router.put("/add-channel", authChannelMiddleware, async (req: any, res: any) => {
   try {
     const user = await User.findOne({ _id: req.user.id });
-    console.log(user);
     const { message, quickButtons, urlButtons, keyboard, key } = req.body;
     if (key == "vk") {
       if (user) {
+        console.log(message);
         user.channels[0].message = message;
         user.channels[0].quickButtons = quickButtons;
         user.channels[0].urlButtons = urlButtons;
@@ -142,6 +139,37 @@ router.put("/add-channel", addChannelMiddleware, async (req: any, res: any) => {
     } else {
       if (user) {
         user.channels[3].message = message;
+        await user.save();
+      }
+    }
+    return res.json({ user });
+  } catch (e) {
+    res.send({ message: "Ошибка сервера" });
+  }
+});
+
+router.put("/set-channel", authChannelMiddleware, async (req: any, res: any) => {
+  try {
+    const user = await User.findOne({ _id: req.user.id });
+    const { isActive, key } = req.body;
+    if (key == "vk") {
+      if (user) {
+        user.channels[0].isActive = isActive;
+        await user.save();
+      }
+    } else if (key == "telegram") {
+      if (user) {
+        user.channels[1].isActive = isActive;
+        await user.save();
+      }
+    } else if (key == "whatsapp") {
+      if (user) {
+        user.channels[2].isActive = isActive;
+        await user.save();
+      }
+    } else {
+      if (user) {
+        user.channels[3].isActive = isActive;
         await user.save();
       }
     }

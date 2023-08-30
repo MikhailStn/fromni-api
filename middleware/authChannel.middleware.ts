@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import config from "config";
 
-export function addChannelMiddleware(req: any, res: any, next: any) {
+export function authChannelMiddleware(req: any, res: any, next: any) {
   try {
     const token = req.body.token;
     if (!token) {
